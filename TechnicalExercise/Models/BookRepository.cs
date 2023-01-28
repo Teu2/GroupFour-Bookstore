@@ -32,7 +32,7 @@ namespace TechnicalExercise.Models
                     {
                         BookId = reader.GetString("id"),
                         BookName = reader.GetString("name"),
-                        Reserved = reader.GetBoolean("reserved"),
+                        Reserved = reader.GetBoolean("reserved_booking"),
                     });
                 }
                 return books;
@@ -41,7 +41,7 @@ namespace TechnicalExercise.Models
             {
                 Console.WriteLine(ex.ToString());
                 
-                connection.Close();
+                connection.Close(); // closing the connection
                 Console.WriteLine("Done.");
                
                 return books;
@@ -50,59 +50,36 @@ namespace TechnicalExercise.Models
 
         public BookModel GetBookById(string bookId, List<BookModel> books)
         {
-            foreach (var book in books)
+            foreach (var book in books) // finds the book with the corrosponding book id
             {
-                if (book.BookId == bookId)return book;
+                if (book.BookId == bookId) return book;
             }
             return null;
         }
 
-        public void UpdateBook(BookModel book)
+        public void ReserveBook(BookModel book)
         {
+            using var connection = new MySqlConnection(_connectionString); // establish connection
 
-        }
-
-        public List<TechnicalExercise.Models.BookModel> SearchBooks(string query)
-        {
-            using (var connection = new MySqlConnection(_connectionString))
+            try
             {
-                connection.Open();
-                using (var command = new MySqlCommand("SELECT * FROM books WHERE title LIKE @query OR author LIKE @query", connection))
-                {
-                    command.Parameters.AddWithValue("@query", "%" + query + "%");
-                    using (var reader = command.ExecuteReader())
-                    {
-                        var books = new List<TechnicalExercise.Models.BookModel>();
-                        while (reader.Read())
-                        {
-                            books.Add(new TechnicalExercise.Models.BookModel
-                            {
-                                BookId = reader.GetString("id"),
-                                BookName = reader.GetString("title"),
-                                Reserved = reader.GetBoolean("reserved"),
-                                BookingNumber = reader.GetString("booking_number")
-                            });
-                        }
-                        return books;
-                    }
-                }
+                connection.Open(); // open connection
+
+                // update the book in the database to be reserved with customer name and customer email - we can use the same values to unreserve the book
+                using var command = new MySqlCommand("UPDATE books_library SET reserved_booking = true, customer_name = @customerName, booking_number = @bookingNumber WHERE id = @bookId", connection);
+                
+                // updating the field values for the reserved book
+                command.Parameters.AddWithValue("@bookId", book.BookId);
+                command.Parameters.AddWithValue("@customerName", book.CustomerName);
+                command.Parameters.AddWithValue("@customerEmail", book.CustomerEmail);
+                command.Parameters.AddWithValue("@bookingNumber", book.BookingNumber);
+
+                command.ExecuteNonQuery(); // executes sql statement
             }
-        }
-
-        public string ReserveBook(BookModel book)
-        {
-            using (var connection = new MySqlConnection(_connectionString))
+            catch(Exception e)
             {
-                connection.Open();
-                using (var command = new MySqlCommand("UPDATE books SET reserved = true, customer_name = @customerName, booking_number = @bookingNumber WHERE book_id = @bookId", connection))
-                {
-                    var bookingNumber = Guid.NewGuid().ToString();
-                    command.Parameters.AddWithValue("@bookId", book.BookId);
-                    command.Parameters.AddWithValue("@customerName", book.CustomerName);
-                    command.Parameters.AddWithValue("@bookingNumber", book.BookingNumber);
-                    command.ExecuteNonQuery();
-                    return bookingNumber;
-                }
+                Console.WriteLine(e);
+                connection.Close(); // close connection
             }
         }
     }

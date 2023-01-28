@@ -23,14 +23,14 @@ namespace TechnicalExercise.Controllers
             return View(books); // Pass the list of books to the view
         }
 
-        public IActionResult Search(string searchString)
+        public IActionResult Search(string searchString) // used for search the book library
         {
             List<BookModel> books = bookRepo.GetBooks();
             Console.WriteLine("Searching...");
 
             if(searchString == null) return View(books);
 
-            if (!string.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrEmpty(searchString)) // searches for books that contains the search string - no need to query the database and return the result
             {
                 books = books.Where(b => b.BookName.Contains(searchString)).ToList();
             }
@@ -48,13 +48,13 @@ namespace TechnicalExercise.Controllers
             return View();
         }
 
-        public IActionResult ReservationFailure(string reason)
+        public IActionResult ReservationFailure(string reason) // Action result to display reservation failure with reasoning so the user understands what went wrong.
         {
             ViewData["reason"] = reason;
             return View();
         }
 
-        public IActionResult ReservationSuccess(string bookingNumber, string customerName, string bookName)
+        public IActionResult ReservationSuccess(string bookingNumber, string customerName, string bookName) // Action result to display reservation success
         {
             ViewData["bookingNumber"] = bookingNumber;
             ViewData["customerName"] = customerName;
@@ -82,8 +82,7 @@ namespace TechnicalExercise.Controllers
                 }
             }
 
-            
-            // returns failure message if the user sends an empty string
+            // Initial screening to check if the Dictionary contains the specific key to resolve throwing an error
             if (!formValues.ContainsKey("customerName_" + bId) || !formValues.ContainsKey("customerEmail_" + bId)) return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = "Your Information was not entered" }); // returns failure if the user sends an empty string
 
             // Assigning required values to later be used to unreserve books 
@@ -91,7 +90,8 @@ namespace TechnicalExercise.Controllers
             string customerEmail = formValues["customerEmail_"+ bId];
             string bookId = formValues["bookId_" + bId];
 
-            Console.WriteLine($"customerName: {customerName} | customerEmail {customerEmail} | bookId: {bookId}");
+            // returns failure message if the user sends an empty string
+            if (customerName == null || customerEmail == null) return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = "Your Information was not entered" }); // returns failure if the user sends an empty string
 
             List<BookModel> books = bookRepo.GetBooks();
             var book = bookRepo.GetBookById(bookId, books); // Retrieve the book that the customer wants to reserve
@@ -108,14 +108,13 @@ namespace TechnicalExercise.Controllers
                 book.CustomerName = customerName;
                 book.CustomerEmail = customerEmail;
 
-                bookRepo.UpdateBook(book);
-
+                bookRepo.ReserveBook(book);
 
                 return RedirectToAction("ReservationSuccess", new { reservationStatus = "success", bookingNumber = book.BookingNumber, customerName = customerName, bookName = book.BookName });
             }
             else
             {
-                return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = "Book is already reserved by someone else" });
+                return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = $"The book '{book.BookName}' is already reserved by someone else" });
             }
         }
 
