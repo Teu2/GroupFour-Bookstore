@@ -28,7 +28,7 @@
                         <tr>
                             <th class="thead-margin">Title</th>
                             <th class="thead-margin">Reserved</th>
-                            <th class="thead-margin"></th>
+                            <th class="thead-margin">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -39,17 +39,17 @@
                                 <td class="align-left t-20px">@book.BookName</td>
                                 @if(@book.Reserved == false)
                                 {
-                                    <td class="t-20px">No</td>
+                                    <td class="t-20px">❌</td>
                                 }
                                 else
                                 {
-                                    <td class="t-20px">Yes</td>
+                                    <td class="t-20px">✔️</td>
                                 }
                                 <td class="t-20px">
                                     <input type="text" name='formValues[customerName_@book.BookId]' value="@ViewBag.CurrentFilter" placeholder="Name..." />
                                     <input type="text" name='formValues[customerEmail_@book.BookId]' value="@ViewBag.CurrentFilter" placeholder="Email..." />
                                     <input type="hidden" name='formValues[bookId_@book.BookId]' value="@book.BookId" />
-                                    <button type="submit">Reserve</button>
+                                    <input type="submit" value="Reserve 📑"/>
                                 </td>
                             </tr>
                             counter++;
