@@ -61,12 +61,18 @@ namespace TechnicalExercise.Models
         {
             using var connection = new MySqlConnection(_connectionString); // establish connection
 
+            Console.WriteLine($"book name: {book.BookName}");
+            Console.WriteLine($"book id: {book.BookId}");
+            Console.WriteLine($"customer name: {book.CustomerName}");
+            Console.WriteLine($"customer email: {book.CustomerEmail}");
+            Console.WriteLine($"booking number: {book.BookingNumber}");
+
             try
             {
                 connection.Open(); // open connection
 
                 // update the book in the database to be reserved with customer name and customer email - we can use the same values to unreserve the book
-                using var command = new MySqlCommand("UPDATE books_library SET reserved_booking = true, customer_name = @customerName, booking_number = @bookingNumber WHERE id = @bookId", connection);
+                using var command = new MySqlCommand("UPDATE books_library SET reserved_booking = true, customer_name = @customerName, customer_email = @customerEmail, booking_number = @bookingNumber WHERE id = @bookId", connection);
                 
                 // updating the field values for the reserved book
                 command.Parameters.AddWithValue("@bookId", book.BookId);
