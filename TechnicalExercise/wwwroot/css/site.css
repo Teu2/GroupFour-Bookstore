@@ -1,0 +1,53 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.display-4{
+    
+}
+
+.book-listings{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style-type: none;
+}
+
+.center{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.align-left{
+    text-align: left;
+    padding-left: 10px;
+}
+
+.thead-margin {
+    padding: 3px 50px;
+    background-color: #4098dc;
+}
+
+.t-20px{
+    padding-top: 20px
+}
+
+.book-display-table{
+    margin-top: 50px;
+}

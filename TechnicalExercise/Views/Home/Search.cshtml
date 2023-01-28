@@ -1,0 +1,62 @@
+﻿@{ViewData["Title"] = "BOOKSTORE 📖";}
+@model IEnumerable<TechnicalExercise.Models.BookModel>
+
+<div class="text-center">
+    <h1 class="display-4">@ViewData["Title"]</h1>
+
+    <div class="center"> @*search form*@
+        @using (Html.BeginForm("Search", "Home", FormMethod.Get))
+        {
+            <p>
+                <input type="text" name="searchString" value="@ViewBag.CurrentFilter" placeholder="Search..."/>
+                <input type="submit" value="Search" />
+            </p>
+        }
+    </div>
+
+    <div class="center"> @*table to display books*@
+         @if (Model.Count() == 0)
+        {
+            <p>Sorry, we were unable to find that book.</p>
+        }
+        else
+        {
+            @using (Html.BeginForm("Reserve", "Home", FormMethod.Get))
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="thead-margin">Title</th>
+                            <th class="thead-margin">Reserved</th>
+                            <th class="thead-margin"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{int counter = 1;}
+                        @foreach (var book in Model)
+                        {
+                            <tr class="hover-tr">
+                                <td class="align-left t-20px">@book.BookName</td>
+                                @if(@book.Reserved == false)
+                                {
+                                    <td class="t-20px">No</td>
+                                }
+                                else
+                                {
+                                    <td class="t-20px">Yes</td>
+                                }
+                                <td class="t-20px">
+                                    <input type="text" name='formValues[customerName_@book.BookId]' value="@ViewBag.CurrentFilter" placeholder="Name..." />
+                                    <input type="text" name='formValues[customerEmail_@book.BookId]' value="@ViewBag.CurrentFilter" placeholder="Email..." />
+                                    <input type="hidden" name='formValues[bookId_@book.BookId]' value="@book.BookId" />
+                                    <button type="submit">Reserve</button>
+                                </td>
+                            </tr>
+                            counter++;
+                        }
+                    </tbody>
+                </table>
+            }
+        }
+    </div>
+</div>
