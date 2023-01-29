@@ -24,7 +24,7 @@ namespace TechnicalExercise.Models
                 Console.WriteLine("Connecting to MySQL...");
                 connection.Open();
 
-                using var command = new MySqlCommand("SELECT * FROM books_library", connection); // select all books from the database to be displayed
+                using MySqlCommand command = new MySqlCommand("SELECT * FROM books_library", connection); // select all books from the database to be displayed
                 using var reader = command.ExecuteReader(); // returns mysql data reader object containing values from the databse
 
                 while (reader.Read())
@@ -34,6 +34,9 @@ namespace TechnicalExercise.Models
                         BookId = reader.GetString("id"),
                         BookName = reader.GetString("name"),
                         Reserved = reader.GetBoolean("reserved_booking"),
+                        CustomerName = reader.GetString("customer_name"),
+                        CustomerEmail = reader.GetString("customer_email"),
+                        BookingNumber = reader.GetString("booking_number"),
                     });
                 }
                 return books; // returns the list of books
@@ -79,6 +82,16 @@ namespace TechnicalExercise.Models
             return null;
         }
 
+        public BookModel GetBookById(string bookId)
+        {
+            var books = GetBooks();
+            foreach (var book in books) // finds the book with the corrosponding book id
+            {
+                if (book.BookId == bookId) return book;
+            }
+            return null;
+        }
+
         public void ReserveBook(BookModel book)
         {
             using var connection = new MySqlConnection(_connectionString); // establish connection
@@ -95,7 +108,7 @@ namespace TechnicalExercise.Models
                 connection.Open(); // open connection
 
                 // update the book in the database to be reserved with customer name and customer email - we can use the same values to unreserve the book if required
-                using var command = new MySqlCommand("UPDATE books_library SET reserved_booking = true, customer_name = @customerName, customer_email = @customerEmail, booking_number = @bookingNumber WHERE id = @bookId", connection);
+                using MySqlCommand command = new MySqlCommand("UPDATE books_library SET reserved_booking = true, customer_name = @customerName, customer_email = @customerEmail, booking_number = @bookingNumber WHERE id = @bookId", connection);
                 
                 // updating the field values for the reserved book safely
                 command.Parameters.AddWithValue("@bookId", book.BookId);
@@ -112,7 +125,7 @@ namespace TechnicalExercise.Models
             }
         }
 
-        public void UnReserveBook(BookModel book)
+        public bool UnReserveBook(BookModel book)
         {
             using var connection = new MySqlConnection(_connectionString); // establish connection
 
@@ -120,21 +133,26 @@ namespace TechnicalExercise.Models
             {
                 connection.Open(); // open connection
 
-                // update the book in the database to unreserve the book
-                using var command = new MySqlCommand("UPDATE books_library SET reserved_booking = false WHERE id = @bookId, customer_name = @customerName, customer_email = @customerEmail, booking_number = @bookingNumber", connection);
+                // updating the field values for the reserved book to default values
+                using MySqlCommand command = new MySqlCommand("UPDATE books_library SET reserved_booking = false, customer_name = 'Empty', customer_email = 'Empty', booking_number = 0 " +
+                    "WHERE id = @bookId AND booking_number = @bookingNumber AND customer_name = @customerName AND customer_email = @customerEmail", connection);
 
                 // updating the field values for the reserved book safely
                 command.Parameters.AddWithValue("@bookId", book.BookId);
-                command.Parameters.AddWithValue("@customerName", null);
-                command.Parameters.AddWithValue("@customerEmail", null);
-                command.Parameters.AddWithValue("@bookingNumber", 0);
+                command.Parameters.AddWithValue("@customerName", book.CustomerName);
+                command.Parameters.AddWithValue("@customerEmail", book.CustomerEmail);
+                command.Parameters.AddWithValue("@bookingNumber", book.BookingNumber);
 
                 command.ExecuteNonQuery(); // executes sql statement
+
+                return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 connection.Close(); // close connection
+
+                return false;
             }
         }
     }

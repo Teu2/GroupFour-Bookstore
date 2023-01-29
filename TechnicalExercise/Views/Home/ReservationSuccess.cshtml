@@ -1,8 +1,13 @@
-﻿@{
-    ViewData["Title"] = "Reservation Success";
-}
+﻿
+@*success page*@
 
-<h1>Book Reservation Success</h1>
-<p>Awesome @ViewData["customerName"]! Your reservation for <em>"@ViewData["bookName"]"</em> was successful.</p>
-<p> Your booking number is: <strong>@ViewData["bookingNumber"]</strong></p>
-<p><strong>@ViewData["reason"]</strong></p>
+@if((string)@ViewData["reservationStatus"] == "Book Unreservation Success"){
+    <h1>@ViewData["reservationStatus"]</h1>
+    <p>Awesome @ViewData["customerName"]! Your attempt to unreserve <em>"@ViewData["bookName"]"</em> was successful.</p>
+}
+else{
+    <h1>@ViewData["reservationStatus"]</h1>
+    <p>Awesome @ViewData["customerName"]! Your reservation for <em>"@ViewData["bookName"]"</em> was successful.</p>
+    <p> Your booking number is: <strong>@ViewData["bookingNumber"]</strong></p>
+    <p> Book ID for "@ViewData["bookName"]": <strong>@ViewData["bookId"]</strong></p>
+}

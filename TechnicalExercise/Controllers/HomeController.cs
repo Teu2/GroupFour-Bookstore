@@ -38,27 +38,35 @@ namespace TechnicalExercise.Controllers
             return View(books);
         }
 
-        public IActionResult Privacy()
+        public IActionResult Privacy() // Github link
         {
             return View();
         }
 
-        public IActionResult About()
+        public IActionResult About() // About section
         {
             return View();
         }
 
-        public IActionResult ReservationFailure(string reason) // action result to display reservation failure with reasoning - so the user understands what went wrong
+        public IActionResult Unreserve()
         {
+            return View();
+        }
+
+        public IActionResult ReservationFailure(string error, string reason) // action result to display reservation failure with reasoning - so the user understands what went wrong
+        {
+            ViewData["error"] = error;
             ViewData["reason"] = reason;
             return View();
         }
 
-        public IActionResult ReservationSuccess(string bookingNumber, string customerName, string bookName) // action result to display reservation success
+        public IActionResult ReservationSuccess(string reservationStatus, string bookingNumber, string customerName, string bookName, string bookId) // action result to display reservation success
         {
+            ViewData["reservationStatus"] = reservationStatus;
             ViewData["bookingNumber"] = bookingNumber;
             ViewData["customerName"] = customerName;
             ViewData["bookName"] = bookName;
+            ViewData["bookId"] = bookId;
             return View();
         }
 
@@ -67,21 +75,21 @@ namespace TechnicalExercise.Controllers
             string bId = bookRepo.GetBookId(formValues); // book id
 
             // initial screening to check if the Dictionary contains the specific key to resolve throwing an error
-            if (!formValues.ContainsKey("customerName_" + bId) || !formValues.ContainsKey("customerEmail_" + bId)) return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = "Your Information was not entered" }); // returns failure if the user sends an empty string
+            if (!formValues.ContainsKey("customerName_" + bId) || !formValues.ContainsKey("customerEmail_" + bId)) return RedirectToAction("ReservationFailure", new { reservationStatus = "Book Reservation Failure", error = "Sorry, we were unable to reserve the book", reason = "Your Information was not entered correctly" }); // returns failure if the user sends an empty string
 
             // assigning required values to later be used to unreserve books 
             string customerName = formValues["customerName_"+ bId];
             string customerEmail = formValues["customerEmail_"+ bId];
             string bookId = formValues["bookId_" + bId];
 
-            // returns failure message if the user sends an empty string
-            if (customerName == null || customerEmail == null) return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = "Your Information was not entered" }); // returns failure if the user sends an empty string
+            // returns failure message if the user sends an empty string or the email doesn't contain an @ symbol
+            if (customerName == null || customerEmail == null || (!customerEmail.Contains('@'))) return RedirectToAction("ReservationFailure", new { reservationStatus = "Book Reservation Failure", error = "Sorry, we were unable to reserve the book", reason = "Your Information was not entered correctly" }); // returns failure if the user sends an empty string
 
             List<BookModel> books = bookRepo.GetBooks();
             var book = bookRepo.GetBookById(bookId, books); // retrieve the book that the customer wants to reserve
 
             Console.WriteLine("reserving...");
-            if (book.Reserved == false) // check if the book is already reserved
+            if (book.Reserved == false && book.CustomerName == "Empty" && book.BookingNumber == "0") // check if the book is already reserved
             {
                 // generate a booking number
                 var bookingNumber = Guid.NewGuid().ToString();
@@ -94,51 +102,43 @@ namespace TechnicalExercise.Controllers
 
                 bookRepo.ReserveBook(book); // calls the reserve method to update the mysql database field values for the specific books
 
-                return RedirectToAction("ReservationSuccess", new { reservationStatus = "success", bookingNumber = book.BookingNumber, customerName = customerName, bookName = book.BookName });
+                return RedirectToAction("ReservationSuccess", new { reservationStatus = "Book Reservation Success", bookingNumber = book.BookingNumber, customerName = customerName, bookName = book.BookName, bookId = book.BookId });
             }
             else
             {
-                return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = $"The book '{book.BookName}' is already reserved by someone else" });
+                return RedirectToAction("ReservationFailure", new { reservationStatus = "Book Reservation Failure", error = "Sorry, we were unable to reserve the book", reason = $"The book '{book.BookName}' is already reserved by someone else" });
             }
         }
 
-        public IActionResult UnReserve(Dictionary<string, string> formValues)
+        public IActionResult UnreserveBook(string name, string email, string bookId, string bookingNumber)
         {
-            string bId = bookRepo.GetBookId(formValues); // book id
+            Console.WriteLine($"{name} {email} {bookId} {bookingNumber}");
+            
+            // returns failure message if the user sends an empty string or the email doesn't contain an @ symbol
+            if (!email.Contains('@')) return RedirectToAction("ReservationFailure", new { reservationStatus = "Book Reservation Failure", error = "Sorry, we couldn't unreserve that book", reason = "Your Information was not entered correctly" }); // returns failure if the user sends an empty string
+            var book = bookRepo.GetBookById(bookId);
 
-            // initial screening to check if the Dictionary contains the specific key to resolve throwing an error
-            if (!formValues.ContainsKey("customerName_" + bId) || !formValues.ContainsKey("customerEmail_" + bId)) return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = "Your Information was not entered" }); // returns failure if the user sends an empty string
-
-            // assigning required values to later be used to unreserve books 
-            string customerName = formValues["customerName_" + bId];
-            string customerEmail = formValues["customerEmail_" + bId];
-            string bookId = formValues["bookId_" + bId];
-
-            // returns failure message if the user sends an empty string
-            if (customerName == null || customerEmail == null) return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = "Your Information was not entered" }); // returns failure if the user sends an empty string
-
-            List<BookModel> books = bookRepo.GetBooks();
-            var book = bookRepo.GetBookById(bookId, books); // retrieve the book that the customer wants to reserve
-
-            Console.WriteLine("reserving...");
-            if (book.Reserved == false) // check if the book is already reserved
+            if (book != null && book.CustomerName == name && book.CustomerEmail == email && book.BookingNumber == bookingNumber)
             {
-                // generate a booking number
-                var bookingNumber = Guid.NewGuid().ToString();
+                Console.WriteLine("found book");
+                Console.WriteLine($"{book.BookName} {book.BookId} {book.CustomerName} | {book.CustomerEmail} | {book.BookingNumber}");
+                
+                bool unreserved = bookRepo.UnReserveBook(book);
 
-                // update the book's reservation status and booking number in the database
-                book.Reserved = !book.Reserved;
-                book.BookingNumber = bookingNumber;
-                book.CustomerName = customerName;
-                book.CustomerEmail = customerEmail;
-
-                bookRepo.UnReserveBook(book); // calls the reserve method to update the mysql database field values for the specific books
-
-                return RedirectToAction("ReservationSuccess", new { reservationStatus = "success", bookingNumber = book.BookingNumber, customerName = customerName, bookName = book.BookName });
+                if (unreserved)
+                {
+                    return RedirectToAction("ReservationSuccess", new { reservationStatus = "Book Unreservation Success", customerName = book.CustomerName, bookName = book.BookName });
+                }
+                else
+                {
+                    return RedirectToAction("ReservationFailure", new { reservationStatus = "Book Reservation Failure", error = "Sorry, we couldn't unreserve that book", reason = "You don't have the correct credentials to unreserve the book." }); // returns failure if the user sends an empty string
+                }
+                
             }
             else
             {
-                return RedirectToAction("ReservationFailure", new { reservationStatus = "failure", reason = $"The book '{book.BookName}' is already reserved by someone else" });
+                Console.WriteLine("didnt find book");
+                return RedirectToAction("ReservationFailure", new { reservationStatus = "Book Reservation Failure", error = "Sorry, we couldn't unreserve that book", reason = "You don't have the correct credentials to unreserve the book." }); // returns failure if the user sends an empty string
             }
         }
 

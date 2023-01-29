@@ -17,11 +17,7 @@ body {
   margin-bottom: 60px;
 }
 
-.display-4{
-    
-}
-
-.book-listings{
+.book-listings {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -50,4 +46,29 @@ body {
 
 .book-display-table{
     margin-top: 50px;
+}
+
+.form-parent {
+    margin-top: 50px;
+}
+
+.unreserve-form{
+    border-top: 20px solid #4098dc;
+    padding: 30px;
+    /*border-radius: 10px;*/
+    padding-bottom: 20px;
+    width: 300px;
+    box-shadow: 0px 3px 10px #ccc;
+}
+
+.input-group {
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: column;
+}
+
+.input-group input {
+    margin-top: 20px;
+    border: 1px solid #8f8f8f;
+    padding-left: 8px;
 }

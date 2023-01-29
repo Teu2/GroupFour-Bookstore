@@ -1,0 +1,24 @@
+﻿@{ViewData["Title"] = "UNRESERVE BOOK";}
+@model IEnumerable<TechnicalExercise.Models.BookModel>
+
+<div class="text-center">
+    <h1 class="display-4">@ViewData["Title"]</h1>
+
+    <div class="center form-parent"> @*search form*@
+        @using (Html.BeginForm("UnreserveBook", "Home", FormMethod.Get))
+        {
+            <div class="unreserve-form">
+                <h4>FORM</h4>
+                <div class="input-group">
+                    <input type="text" name="name" value="@ViewBag.CurrentFilter" placeholder="Name..." required/>
+                    <input type="text" name="email" value="@ViewBag.CurrentFilter" placeholder="Email..." required/>
+                    <input type="text" name="bookId" value="@ViewBag.CurrentFilter" placeholder="Book Id..." required/>
+                    <input type="text" name="bookingNumber" value="@ViewBag.CurrentFilter" placeholder="Booking Number..." required/>
+                    <input type="submit" value="Unreserve" />
+                </div>
+            </div>
+        }
+    </div>
+
+</div>
+
